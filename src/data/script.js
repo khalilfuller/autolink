@@ -1153,73 +1153,289 @@ function smartSplitCompanyName_(name) {
   let result = name.replace(/([a-z])([A-Z])/g, '$1 $2');
   if (result.includes(' ')) return result;
 
-  // Compound words that should NEVER be split
+  // Compound words that should NEVER be split - these are real words or established brands
   const preserveCompounds = new Set([
-    'skyline', 'redwood', 'bluesky', 'greenfield', 'goldstein', 'silverberg',
-    'blackstone', 'whiteboard', 'brightside', 'darkside',
-    'northeast', 'northwest', 'southeast', 'southwest',
-    'quickstart', 'jumpstart', 'headstart', 'kickstart',
-    'dataflow', 'workflow', 'cashflow', 'airflow',
-    'sunshine', 'moonlight', 'starlight', 'firefly',
-    'medicare', 'childcare',
-    'software', 'hardware', 'firmware', 'malware',
-    'fintech', 'biotech', 'edtech', 'medtech', 'proptech', 'regtech', 'insurtech',
-    'startup', 'startups', 'techstars', 'nextgen', 'newgen',
-    'golden', 'silver', 'diamond', 'platinum',
-    'overview', 'insight', 'outlook',
-    'network', 'framework', 'benchmark',
-    'upwork', 'teamwork', 'homework', 'clockwork',
-    'evergreen', 'evercore', 'evernote', 'wellspring', 'wellsfargo',
-    'paypal', 'payroll',
-    'facebook', 'snapchat', 'tiktok', 'youtube', 'linkedin',
-    'salesforce', 'workday', 'servicenow', 'crowdstrike',
-    'mongodb', 'snowflake', 'databricks', 'cloudflare',
-    'coinbase', 'blockchain', 'bitcoin',
-    'doordash', 'instacart', 'postmates', 'grubhub',
-    'silverlake', 'goldenstate'
+    // Nature/geography compounds
+    'skyline', 'redwood', 'bluesky', 'greenfield', 'goldfield', 'sunflower', 'moonshine',
+    'waterfall', 'waterfront', 'waterside', 'riverside', 'lakeside', 'seaside', 'hillside',
+    'mountainview', 'oceanview', 'parkview', 'cityview', 'worldview',
+    'sunrise', 'sunset', 'sunshine', 'moonlight', 'starlight', 'daylight', 'twilight',
+    'springboard', 'springfield', 'summerfield', 'wintergreen', 'autumnwood',
+    'northstar', 'southgate', 'eastgate', 'westgate', 'northeast', 'northwest', 'southeast', 'southwest',
+    'northwind', 'southwind', 'eastwind', 'westwind',
+    'highland', 'lowland', 'midland', 'heartland', 'homeland', 'farmland', 'parkland', 'woodland',
+    'blackwood', 'greenwood', 'oakwood', 'pinewood', 'maplewood', 'cedarwood', 'beechwood',
+    'stonewood', 'ironwood', 'driftwood', 'rosewood', 'sandalwood', 'teakwood',
+    'firefly', 'dragonfly', 'butterfly', 'ladybug', 'grasshopper',
+
+    // Color compounds (names/brands that shouldn't split)
+    'goldstein', 'silverstein', 'silverberg', 'goldberg', 'greenberg', 'rosenberg', 'weinberg',
+    'blackstone', 'whitestone', 'bluestone', 'brownstone', 'cornerstone', 'milestone', 'keystone',
+    'blackwell', 'caldwell', 'rockwell', 'maxwell', 'cromwell',
+    'whiteboard', 'blackboard', 'dashboard', 'cardboard', 'clipboard', 'keyboard', 'motherboard',
+    'brightside', 'darkside', 'broadside', 'downside', 'upside', 'outside', 'inside', 'roadside',
+    'golden', 'silver', 'bronze', 'diamond', 'platinum', 'titanium', 'crystal',
+
+    // Tech/software compounds
+    'software', 'hardware', 'firmware', 'malware', 'spyware', 'freeware', 'shareware', 'middleware',
+    'fintech', 'biotech', 'edtech', 'medtech', 'proptech', 'regtech', 'insurtech', 'agritech',
+    'adtech', 'martech', 'cleantech', 'greentech', 'healthtech', 'foodtech', 'govtech', 'legaltech',
+    'deeptech', 'nanotech', 'spacetech', 'climatetech', 'wealthtech', 'retailtech', 'traveltech',
+    'database', 'codebase', 'userbase', 'knowledgebase', 'timebase', 'firebase',
+    'dataflow', 'workflow', 'cashflow', 'airflow', 'inflow', 'outflow', 'overflow', 'webflow',
+    'dataset', 'mindset', 'toolset', 'skillset', 'chipset', 'subset', 'offset',
+    'network', 'framework', 'benchmark', 'trademark', 'landmark', 'hallmark', 'bookmark', 'postmark',
+    'feedback', 'playback', 'callback', 'setback', 'drawback', 'kickback', 'flashback', 'payback',
+    'upload', 'download', 'workload', 'payload', 'overload', 'reload',
+    'update', 'upgrade', 'uptime', 'downtime', 'runtime', 'lifetime', 'realtime',
+    'online', 'offline', 'pipeline', 'timeline', 'deadline', 'headline', 'baseline', 'guideline', 'streamline',
+    'username', 'filename', 'hostname', 'pathname', 'typename', 'namespace',
+    'startup', 'startups', 'scaleup', 'scaleups', 'spinoff', 'spinout', 'rollout', 'checkout', 'logout',
+    'nextgen', 'newgen', 'firstgen',
+
+    // Business/finance compounds
+    'overview', 'insight', 'outlook', 'foresight', 'hindsight', 'oversight',
+    'outcome', 'income', 'outcome', 'welcome',
+    'upwork', 'teamwork', 'homework', 'clockwork', 'groundwork', 'fieldwork', 'handiwork', 'firework',
+    'paycheck', 'payroll', 'payday', 'payoff', 'payout', 'payback',
+    'headcount', 'headstart', 'headway', 'headroom', 'headspace', 'headquarters',
+    'kickstart', 'quickstart', 'jumpstart', 'restart',
+    'turnover', 'takeover', 'makeover', 'carryover', 'crossover', 'leftover', 'moreover', 'hangover',
+    'breakthrough', 'breakdown', 'breakout', 'breakaway', 'outbreak',
+    'bootstrap', 'bootstrapped',
+    'shareholder', 'stakeholder', 'placeholder', 'bondholder', 'cardholder', 'policyholder',
+    'workforce', 'workplace', 'workspace', 'workstation', 'workshop', 'workbench',
+    'marketplace', 'commonplace', 'birthplace', 'fireplace',
+    'mainstream', 'downstream', 'upstream', 'livestream', 'bloodstream',
+    'wholesale', 'retail', 'resale',
+
+    // Healthcare/medical compounds
+    'medicare', 'medicaid', 'healthcare', 'childcare', 'eldercare', 'daycare', 'skincare', 'haircare',
+    'eyecare', 'petcare', 'selfcare', 'homecare', 'aftercare',
+    'lifespan', 'wingspan', 'timespan',
+    'bloodwork', 'labwork', 'footwork', 'guesswork', 'patchwork', 'paperwork',
+
+    // Major tech brands (keep as single words)
+    'facebook', 'instagram', 'snapchat', 'tiktok', 'youtube', 'linkedin', 'pinterest', 'whatsapp',
+    'microsoft', 'softbank', 'salesforce', 'workday', 'servicenow', 'crowdstrike', 'pagerduty',
+    'mongodb', 'snowflake', 'databricks', 'cloudflare', 'fastly', 'twilio', 'sendgrid',
+    'coinbase', 'blockchain', 'bitcoin', 'ethereum', 'binance',
+    'doordash', 'instacart', 'postmates', 'grubhub', 'ubereats', 'seamless',
+    'airbnb', 'tripadvisor', 'expedia', 'booking', 'kayak', 'hotwire',
+    'dropbox', 'evernote', 'onenote', 'todoist', 'asana', 'clickup', 'basecamp',
+    'mailchimp', 'hubspot', 'marketo', 'eloqua', 'pardot', 'klaviyo',
+    'zendesk', 'freshdesk', 'intercom', 'helpscout', 'frontapp',
+    'atlassian', 'bitbucket', 'sourcetree', 'trello', 'jira', 'confluence',
+    'github', 'gitlab', 'launchpad', 'sourceforge', 'codebase',
+    'techstars', 'ycombinator', 'angellist', 'crunchbase', 'pitchbook',
+
+    // Finance brands
+    'wellsfargo', 'jpmorgan', 'goldmansachs', 'morganstanley', 'creditsuisse', 'deutschebank',
+    'blackrock', 'vanguard', 'fidelity', 'schwab', 'ameritrade', 'robinhood', 'wealthfront', 'betterment',
+    'silverlake', 'silverlakepm', 'goldengate', 'goldenstate', 'statestreet',
+    'evergreen', 'evercore', 'everbank', 'wellspring',
+    'paypal', 'venmo', 'zelle', 'cashapp', 'squareup', 'stripe', 'adyen', 'klarna', 'afterpay',
+
+    // Real estate/location compounds
+    'penthouse', 'warehouse', 'storehouse', 'courthouse', 'farmhouse', 'townhouse', 'greenhouse',
+    'lighthouse', 'firehouse', 'coffeehouse', 'powerhouse', 'clearinghouse', 'slaughterhouse',
+    'rooftop', 'desktop', 'laptop', 'tabletop', 'mountaintop', 'treetop', 'hilltop',
+    'downtown', 'uptown', 'midtown', 'hometown', 'newtown', 'oldtown',
+    'backyard', 'courtyard', 'junkyard', 'graveyard', 'schoolyard', 'vineyard',
+    'airport', 'seaport', 'spaceport', 'heliport', 'passport', 'transport', 'teleport',
+    'highway', 'freeway', 'parkway', 'driveway', 'pathway', 'gateway', 'doorway', 'hallway', 'railway', 'runway',
+    'crossroads', 'railroad', 'roadmap', 'roadshow', 'roadblock',
+
+    // Common word compounds that are real words
+    'something', 'anything', 'everything', 'nothing', 'somewhere', 'anywhere', 'everywhere', 'nowhere',
+    'someone', 'anyone', 'everyone', 'everyone', 'whatever', 'whenever', 'wherever', 'whoever', 'however',
+    'therefore', 'furthermore', 'otherwise', 'likewise', 'meanwhile', 'nevertheless', 'nonetheless',
+    'understand', 'withstand', 'outstanding', 'standpoint', 'standby', 'standoff', 'standout',
+    'background', 'foreground', 'underground', 'playground', 'battleground', 'campground',
+    'everyday', 'everyone', 'everything', 'overnight', 'overlook', 'overcome', 'overall',
+    'worldwide', 'nationwide', 'statewide', 'citywide', 'companywide', 'industrywide',
+    'lifelike', 'childlike', 'dreamlike', 'warlike', 'businesslike',
+    'lifetime', 'nighttime', 'daytime', 'anytime', 'sometime', 'meantime', 'overtime', 'primetime',
+    'longterm', 'shortterm', 'midterm', 'fulltime', 'parttime', 'halftime',
+    'handmade', 'homemade', 'manmade', 'selfmade', 'readymade', 'custommade', 'tailor-made',
+    'widespread', 'spreadsheet',
+    'upfront', 'storefront', 'waterfront', 'beachfront', 'oceanfront', 'lakefront',
+    'goodwill', 'willpower', 'horsepower', 'manpower', 'firepower', 'brainpower', 'superpower', 'willpower'
   ]);
 
   if (preserveCompounds.has(result.toLowerCase())) {
     return result;
   }
 
-  // Known multi-word prefixes that ARE safe to split
+  // Known multi-word company names that ARE safe to split for better LinkedIn search
   const splitPrefixes = {
-    'blueocean': 'blue ocean', 'bluesky': 'blue sky',
-    'greenmountain': 'green mountain', 'cloudnine': 'cloud nine',
-    'brightpath': 'bright path', 'smartmoney': 'smart money',
-    'ironmountain': 'iron mountain', 'silverlake': 'silver lake',
-    'goldenstate': 'golden state',
+    // Color + noun patterns
+    'blueocean': 'Blue Ocean', 'bluemountain': 'Blue Mountain', 'blueridge': 'Blue Ridge',
+    'bluewater': 'Blue Water', 'bluewave': 'Blue Wave', 'bluebird': 'Blue Bird',
+    'greenlight': 'Green Light', 'greenmountain': 'Green Mountain', 'greenleaf': 'Green Leaf',
+    'greenway': 'Green Way', 'greenstone': 'Green Stone', 'greentree': 'Green Tree',
+    'redrock': 'Red Rock', 'redstone': 'Red Stone', 'redbird': 'Red Bird', 'redpoint': 'Red Point',
+    'whiteoak': 'White Oak', 'whitepine': 'White Pine', 'whitewater': 'White Water',
+    'blackrock': 'Black Rock', 'blackbird': 'Black Bird', 'blackhawk': 'Black Hawk',
+    'goldcrest': 'Gold Crest', 'goldleaf': 'Gold Leaf', 'goldpoint': 'Gold Point',
+    'silvercrest': 'Silver Crest', 'silveroak': 'Silver Oak', 'silverpeak': 'Silver Peak',
+    // Direction + noun patterns
+    'northpoint': 'North Point', 'northstar': 'North Star', 'northgate': 'North Gate',
+    'southpoint': 'South Point', 'southgate': 'South Gate', 'southstar': 'South Star',
+    'eastpoint': 'East Point', 'eastgate': 'East Gate', 'eastside': 'East Side',
+    'westpoint': 'West Point', 'westgate': 'West Gate', 'westside': 'West Side',
+    // Nature patterns
+    'ironmountain': 'Iron Mountain', 'stonemountain': 'Stone Mountain', 'rockyridge': 'Rocky Ridge',
+    'clearwater': 'Clear Water', 'deepwater': 'Deep Water', 'stillwater': 'Still Water',
+    'tallgrass': 'Tall Grass', 'wildflower': 'Wild Flower', 'longleaf': 'Long Leaf',
+    'highpoint': 'High Point', 'highridge': 'High Ridge', 'highland': 'High Land',
+    'broadmoor': 'Broad Moor', 'fairview': 'Fair View', 'grandview': 'Grand View',
+    // Adjective + noun patterns
+    'brightpath': 'Bright Path', 'brightstar': 'Bright Star', 'brightview': 'Bright View',
+    'smartmoney': 'Smart Money', 'smartpath': 'Smart Path', 'smartsource': 'Smart Source',
+    'truenorth': 'True North', 'trueblue': 'True Blue', 'truevalue': 'True Value',
+    'firstlight': 'First Light', 'firstchoice': 'First Choice', 'firstmark': 'First Mark',
+    'newbridge': 'New Bridge', 'newpath': 'New Path', 'newstar': 'New Star',
+    'cloudnine': 'Cloud Nine', 'clearpath': 'Clear Path', 'clearlake': 'Clear Lake',
+    'fasttrack': 'Fast Track', 'fasttrain': 'Fast Train', 'fastforward': 'Fast Forward',
+    'bigpicture': 'Big Picture', 'bigdata': 'Big Data', 'bigsky': 'Big Sky',
+    // Abstract patterns
+    'openroad': 'Open Road', 'opendoor': 'Open Door', 'opensource': 'Open Source',
+    'bluechip': 'Blue Chip', 'topline': 'Top Line', 'frontline': 'Front Line',
+    'nextlevel': 'Next Level', 'nextwave': 'Next Wave', 'nextstep': 'Next Step',
+    'fullstack': 'Full Stack', 'fullcircle': 'Full Circle', 'fullspectrum': 'Full Spectrum'
   };
 
-  // Common company suffixes for smart splitting
+  // Common company suffixes for smart splitting (comprehensive list)
   const companySuffixes = [
-    'labs', 'lab', 'tech', 'technologies', 'technology',
-    'ai', 'ml', 'io', 'hq', 'headquarters',
-    'studio', 'studios', 'media', 'digital',
-    'capital', 'ventures', 'vc', 'fund', 'funds', 'partners', 'partner',
-    'group', 'groups', 'holdings', 'holding',
-    'systems', 'system', 'solutions', 'solution',
-    'services', 'service', 'consulting', 'consultants',
-    'analytics', 'data', 'cloud', 'software', 'apps', 'app',
-    'works', 'logic', 'mind', 'sense', 'vision',
-    'wave', 'flow', 'stream', 'link', 'hub',
-    'box', 'desk', 'base', 'point', 'space', 'place', 'zone', 'realm',
-    'global', 'world', 'international', 'inc', 'corp', 'co', 'llc', 'ltd',
-    'healthcare', 'health', 'care', 'medical', 'med', 'pharma',
-    'finance', 'financial', 'fintech', 'payments', 'pay',
-    'startups', 'startup',
-    'energy', 'power', 'electric',
-    'network', 'networks', 'net',
-    'security', 'secure',
-    'research', 'sciences', 'science',
-    'education', 'learning', 'academy',
-    'commerce', 'retail', 'market', 'markets',
-    'logistics', 'transport', 'shipping',
-    'insurance', 'insure',
-    'realty', 'properties', 'property',
-    'entertainment', 'gaming', 'games',
-    'robotics', 'automation', 'auto'
+    // Tech suffixes
+    'labs', 'lab', 'tech', 'technologies', 'technology', 'techgroup', 'techsolutions',
+    'ai', 'ml', 'io', 'dev', 'devs', 'ops', 'devops',
+    'soft', 'ware', 'code', 'codes', 'coding', 'script', 'byte', 'bits', 'pixel', 'pixels',
+    'cloud', 'clouds', 'hosting', 'servers', 'infra', 'infrastructure',
+    'platform', 'platforms', 'saas', 'paas', 'iaas',
+    'api', 'apis', 'sdk', 'sdks',
+    'cyber', 'cybersecurity', 'infosec', 'netsec',
+
+    // Business entity suffixes
+    'hq', 'headquarters', 'corp', 'corporation', 'corporations',
+    'inc', 'incorporated', 'llc', 'llp', 'ltd', 'limited', 'plc', 'gmbh', 'ag', 'sa', 'bv', 'nv',
+    'co', 'company', 'companies', 'enterprise', 'enterprises',
+    'intl', 'international', 'global', 'globals', 'worldwide',
+
+    // Investment/finance suffixes
+    'capital', 'capitals', 'ventures', 'venture', 'vc', 'vcs',
+    'fund', 'funds', 'funding', 'invest', 'investments', 'investing', 'investors',
+    'partners', 'partner', 'partnership', 'partnerships', 'associates', 'associate',
+    'advisors', 'advisor', 'advisory', 'advisories',
+    'equity', 'equities', 'asset', 'assets', 'wealth', 'wealthmgmt',
+    'holdings', 'holding', 'mgmt', 'management',
+    'group', 'groups', 'grp',
+    'trust', 'trusts', 'fiduciary',
+
+    // Professional services
+    'consulting', 'consultants', 'consultant', 'consultancy',
+    'agency', 'agencies', 'firm', 'firms',
+    'services', 'service', 'svcs', 'svc',
+    'solutions', 'solution', 'solns',
+    'systems', 'system', 'sys',
+    'strategies', 'strategy', 'strategic',
+
+    // Creative/media
+    'studio', 'studios', 'creative', 'creatives', 'design', 'designs', 'designco',
+    'media', 'medias', 'digital', 'digitals', 'interactive',
+    'productions', 'production', 'entertainment', 'ent',
+    'publishing', 'publishers', 'publisher', 'press',
+    'communications', 'communication', 'comms', 'pr',
+    'marketing', 'mktg', 'advertising', 'ads', 'advert',
+    'branding', 'brand', 'brands',
+
+    // Data/analytics
+    'analytics', 'analytic', 'data', 'datagroup', 'datasystems',
+    'insights', 'insight', 'intelligence', 'intel',
+    'metrics', 'stats', 'statistics',
+    'research', 'researches', 'labs',
+    'sciences', 'science', 'sci',
+
+    // Operations/logistics
+    'logistics', 'logistic', 'supply', 'supplychain', 'fulfillment',
+    'transport', 'transportation', 'shipping', 'freight', 'cargo',
+    'warehouse', 'warehousing', 'distribution', 'distro',
+    'operations', 'ops', 'opco',
+
+    // Industry verticals
+    'healthcare', 'health', 'healthtech', 'healthsystems',
+    'medical', 'med', 'medtech', 'biomedical', 'biomed',
+    'pharma', 'pharmaceutical', 'pharmaceuticals', 'biopharma', 'rx',
+    'bio', 'biotech', 'biosciences', 'bioscience', 'lifesciences', 'lifesci',
+    'genomics', 'therapeutics', 'diagnostics',
+    'dental', 'vision', 'optical',
+
+    'finance', 'financial', 'financials', 'fintech', 'finserv',
+    'banking', 'bank', 'bankers', 'bankgroup',
+    'insurance', 'insure', 'insurtech', 'reinsurance',
+    'payments', 'payment', 'pay', 'paytech',
+    'lending', 'lend', 'loans', 'loan', 'credit', 'mortgage',
+
+    'realty', 'realestate', 'properties', 'property', 'proptech',
+    'homes', 'home', 'housing', 'residential', 'commercial',
+    'development', 'developments', 'developers', 'developer',
+    'construction', 'builders', 'builder', 'building',
+
+    'energy', 'energies', 'power', 'powertech', 'utilities', 'utility',
+    'electric', 'electrical', 'electronics', 'electronic',
+    'solar', 'wind', 'renewable', 'renewables', 'cleanenergy', 'greenpower',
+    'oil', 'gas', 'petroleum', 'petro', 'fuel', 'fuels',
+
+    'manufacturing', 'mfg', 'industrial', 'industrials', 'industries', 'industry',
+    'automation', 'auto', 'automotive', 'autotech', 'mobility',
+    'robotics', 'robot', 'robots', 'mechatronics',
+    'aerospace', 'aero', 'aviation', 'defense', 'defence',
+
+    'retail', 'retailers', 'ecommerce', 'commerce', 'shopping',
+    'consumer', 'consumers', 'cpg', 'goods', 'products',
+    'food', 'foods', 'foodtech', 'beverage', 'beverages', 'fnb',
+    'restaurant', 'restaurants', 'hospitality', 'hotels', 'hotel', 'travel',
+
+    'education', 'edu', 'edtech', 'learning', 'academy', 'academies',
+    'training', 'institute', 'institutes', 'university', 'college', 'school', 'schools',
+
+    'gaming', 'games', 'game', 'esports', 'entertainment',
+    'sports', 'sport', 'fitness', 'wellness', 'gym',
+
+    'legal', 'legaltech', 'law', 'attorneys', 'attorney',
+    'hr', 'hrtech', 'talent', 'recruiting', 'staffing', 'workforce',
+
+    'security', 'secure', 'securitygroup', 'protection', 'safety',
+    'network', 'networks', 'networking', 'net', 'telecom', 'telecommunications', 'telco',
+    'wireless', 'mobile', 'cellular',
+
+    // Generic/abstract suffixes
+    'works', 'work', 'workgroup',
+    'logic', 'logics', 'logix',
+    'mind', 'minds', 'brain', 'brains',
+    'sense', 'senses', 'sensory',
+    'vision', 'visions', 'view', 'views',
+    'scape', 'scapes', 'sphere', 'spheres',
+    'wave', 'waves', 'pulse', 'pulses',
+    'flow', 'flows', 'flux',
+    'stream', 'streams', 'river',
+    'path', 'paths', 'way', 'ways', 'route', 'routes',
+    'link', 'links', 'connect', 'connected', 'connections',
+    'hub', 'hubs', 'nexus', 'node', 'nodes',
+    'box', 'boxes', 'cube', 'cubes',
+    'desk', 'desks', 'table', 'tables',
+    'base', 'bases', 'foundation', 'foundations',
+    'point', 'points', 'peak', 'peaks', 'summit',
+    'space', 'spaces', 'place', 'places', 'spot', 'spots',
+    'zone', 'zones', 'realm', 'realms', 'domain', 'domains',
+    'force', 'forces', 'drive', 'drives', 'motor', 'motors',
+    'source', 'sources', 'origin', 'origins', 'root', 'roots',
+    'bridge', 'bridges', 'gate', 'gates', 'port', 'ports',
+    'lab', 'labs', 'workshop', 'forge', 'foundry',
+    'craft', 'crafts', 'artisan', 'maker', 'makers',
+    'stack', 'stacks', 'layer', 'layers',
+    'shift', 'leap', 'jump', 'launch', 'lift', 'rise', 'spark'
   ].sort((a, b) => b.length - a.length);
 
   // Try to split on known suffixes
