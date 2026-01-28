@@ -46,7 +46,7 @@ const CONFIG = {
   TRIGGER_HOUR: 3, // 3 AM (24-hour format)
 
   // Sheet naming
-  SHEET_NAME: 'AutoLink',
+  SHEET_NAME: 'AutoLink - New Connections Each Week',
   MASTER_TAB_NAME: 'Master',
 };
 
