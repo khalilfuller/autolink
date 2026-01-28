@@ -504,33 +504,52 @@ function extractSignatureInfo(body) {
   if (!body) return info;
 
   // First, try to isolate the sender's content by removing quoted/forwarded content
-  // Common quote indicators: lines starting with >, "On ... wrote:", "From:", forwarded message headers
+  // This is CRITICAL: we must remove ALL quoted content to avoid grabbing someone else's LinkedIn
   let senderContent = body;
 
-  // Find where quoted content starts and trim it
+  // Find the EARLIEST quote indicator and cut there
+  // This ensures we don't accidentally grab LinkedIn URLs from quoted replies
   const quotePatterns = [
     /\\n>\\s/,                                    // Traditional > quote
+    /\\n>$/m,                                    // Just > at end of line
     /\\nOn .+ wrote:/i,                          // "On [date] [person] wrote:"
+    /\\nOn .+<.+@.+> wrote:/i,                   // "On [date] Name <email> wrote:"
     /\\n-{3,}\\s*Original Message/i,             // --- Original Message
     /\\n_{3,}\\s*$/m,                            // ___ separator
     /\\nFrom:\\s+.+\\nSent:/i,                   // Outlook forward header
+    /\\nFrom:\\s+.+\\nTo:/i,                     // Another Outlook format
+    /\\nFrom:\\s+.+\\nDate:/i,                   // Apple Mail forward
     /\\n-{3,}\\s*Forwarded message/i,           // Forwarded message
     /\\nBegin forwarded message/i,              // Apple Mail forward
+    /\\n\\*From:\\*/i,                           // Bold From: (some clients)
     /\\n\\[cid:image/i,                          // Embedded images often signal signature end
     /\\nGet Outlook for/i,                      // Outlook mobile signature
     /\\nSent from my iPhone/i,                  // iPhone signature
     /\\nSent from my iPad/i,                    // iPad signature
     /\\nSent from my Android/i,                 // Android signature
     /\\nSent from Mail for Windows/i,           // Windows Mail signature
+    /\\n-{5,}/,                                  // Long dash separator
+    /\\n={5,}/,                                  // Long equals separator
+    /\\n<.+@.+> wrote:/i,                        // "<email> wrote:" format
+    /\\nwrote:\\s*$/im,                          // Just "wrote:" at end of line
   ];
 
+  // Find the EARLIEST occurrence of ANY quote pattern
+  let earliestQuotePos = senderContent.length;
   for (const pattern of quotePatterns) {
     const match = senderContent.search(pattern);
-    if (match > 100) { // Only cut if there's meaningful content before the quote
-      senderContent = senderContent.slice(0, match);
-      break;
+    if (match > 50 && match < earliestQuotePos) { // Need at least 50 chars of content
+      earliestQuotePos = match;
     }
   }
+
+  // Cut at the earliest quote
+  if (earliestQuotePos < senderContent.length) {
+    senderContent = senderContent.slice(0, earliestQuotePos);
+  }
+
+  // Also remove any lines that start with > (quoted lines that might have slipped through)
+  senderContent = senderContent.split('\\n').filter(line => !line.trim().startsWith('>')).join('\\n');
 
   // Get the last ~1500 chars of the sender's actual content (where signature usually is)
   const signatureArea = senderContent.slice(-1500);
