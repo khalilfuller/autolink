@@ -50,145 +50,61 @@ const CONFIG = {
   MASTER_TAB_NAME: 'Master',
 };
 
-// Email patterns to exclude (newsletters, automated emails, etc.)
+// Email patterns to exclude (automated/system emails that are DEFINITELY not real people)
+// IMPORTANT: Be conservative! Only exclude if it's clearly not a person.
+// Many department emails (sales@, dev@, etc.) could be real individuals at small companies.
 const EXCLUDED_PATTERNS = [
+  // === DEFINITELY NOT PEOPLE - Safe to exclude ===
+  // No-reply variants
   /^noreply@/i,
   /^no-reply@/i,
+  /^no_reply@/i,
   /^do-?not-?reply@/i,
-  /^notifications?@/i,
-  /^alerts?@/i,
-  /^support@/i,
-  /^help@/i,
-  /^info@/i,
-  /^hello@/i,
-  /^contact@/i,
-  /^newsletter@/i,
-  /^news@/i,
+  /^donotreply@/i,
+
+  // System/daemon emails
   /^mailer-daemon@/i,
   /^postmaster@/i,
-  /^calendar-notification@/i,
-  /@calendar\\./i,
-  /@docs\\./i,
-  /^bounce@/i,
-  /^feedback@/i,
-  /@.*\\.gserviceaccount\\.com$/i,
   /^daemon@/i,
-  /^auto-confirm@/i,
-  /^confirmation@/i,
-  /^receipts?@/i,
-  /^billing@/i,
-  /^invoices?@/i,
-  /^orders?@/i,
-  /^shipping@/i,
-  /^tracking@/i,
-  /^admin@/i,
-  /^sales@/i,
-  /^marketing@/i,
-  /^team@/i,
-  /^hr@/i,
-  /^recruiting@/i,
-  /^careers@/i,
-  /^jobs@/i,
-  // Additional automated/system emails
-  /^security@/i,
-  /^privacy@/i,
-  /^legal@/i,
-  /^compliance@/i,
-  /^accounts?@/i,
-  /^service@/i,
-  /^customerservice@/i,
-  /^customer-service@/i,
-  /^helpdesk@/i,
-  /^webmaster@/i,
-  /^sysadmin@/i,
   /^root@/i,
-  /^abuse@/i,
-  /^spam@/i,
+  /^cron@/i,
+  /^scheduler@/i,
+  /^bounce@/i,
+  /^bounce-?back@/i,
+
+  // Automated notification prefixes
+  /^automated@/i,
+  /^auto-confirm@/i,
+  /^robot@/i,
+  /^bot@/i,
+
+  // Subscription/notification system emails
   /^unsubscribe@/i,
   /^optout@/i,
   /^opt-out@/i,
-  /^donotreply@/i,
-  /^automated@/i,
-  /^auto@/i,
-  /^system@/i,
-  /^robot@/i,
-  /^bot@/i,
-  /^cron@/i,
-  /^scheduler@/i,
+  /^newsletter@/i,
   /^digest@/i,
-  /^updates?@/i,
-  /^notify@/i,
-  /^reminder@/i,
   /^subscriptions?@/i,
-  /^welcome@/i,
-  /^onboarding@/i,
-  /^invites?@/i,
-  /^rsvp@/i,
-  /^events?@/i,
-  /^registrations?@/i,
-  /^payments?@/i,
-  /^transactions?@/i,
-  /^refunds?@/i,
-  /^returns?@/i,
-  /^delivery@/i,
-  /^fulfillment@/i,
-  /^warehouse@/i,
-  /^logistics@/i,
-  /^procurement@/i,
-  /^purchasing@/i,
-  /^vendors?@/i,
-  /^suppliers?@/i,
-  /^partners?@/i,
-  /^affiliates?@/i,
-  /^press@/i,
-  /^media@/i,
-  /^pr@/i,
-  /^comms?@/i,
-  /^communications?@/i,
-  /^social@/i,
-  /^community@/i,
-  /^forum@/i,
-  /^moderator@/i,
-  /^editorial@/i,
-  /^editor@/i,
-  /^content@/i,
-  /^creative@/i,
-  /^design@/i,
-  /^dev@/i,
-  /^engineering@/i,
-  /^tech@/i,
-  /^it@/i,
-  /^ops@/i,
-  /^operations@/i,
-  /^finance@/i,
-  /^accounting@/i,
-  /^payroll@/i,
-  /^benefits@/i,
-  /^talent@/i,
-  /^people@/i,
-  /^culture@/i,
-  /^learning@/i,
-  /^training@/i,
-  /^education@/i,
-  /^research@/i,
-  /^analytics@/i,
-  /^data@/i,
-  /^reports?@/i,
-  /^metrics@/i,
-  /^dashboard@/i,
-  /^monitor@/i,
-  /^status@/i,
-  /^health@/i,
+
+  // Calendar/docs system emails
+  /^calendar-notification@/i,
+  /@calendar\\./i,
+  /@docs\\./i,
+
+  // Test/staging environments
   /^test@/i,
   /^testing@/i,
   /^staging@/i,
-  /^demo@/i,
   /^sandbox@/i,
-  /^trial@/i,
+
+  // Reply tokens (automated reply tracking emails like reply-abc123@)
+  /^reply-[a-z0-9]+@/i,
+  /^bounces?\\+/i,
+
   // Platform notification SUBDOMAINS only (NOT main company domains!)
-  // These patterns match subdomains like notifications.uber.com, email.doordash.com
-  // but NOT the main domain like john@uber.com or jane@doordash.com
-  /@(notifications?|alerts?|mail|email|e-mail|mailer|bounce|updates?|news|promo|marketing|campaigns?|transactional|automated|system|noreply|no-reply)\\.[^@]+$/i,
+  // Matches: notifications.uber.com, email.doordash.com, mail.company.com
+  // Does NOT match: john@uber.com, jane@doordash.com
+  /@(notifications?|alerts?|mail|email|e-mail|mailer|bounce|updates?|news|promo|marketing|campaigns?|transactional|automated|system|noreply|no-reply|msg|sms|push|digest|delivery)\\.[^@]+$/i,
 
   // Google service accounts
   /@.*\\.gserviceaccount\\.com$/i,
@@ -196,6 +112,8 @@ const EXCLUDED_PATTERNS = [
   // Dedicated email marketing/notification domains (these are ONLY used for automated emails)
   /@facebookmail\\.com$/i,
   /@(em|t|e)\\d*\\.linkedin\\.com$/i,  // LinkedIn's automated email subdomains like em.linkedin.com
+
+  // Major email service providers (ESPs) - these domains only send automated emails
   /@.*\\.sendgrid\\.(com|net)$/i,
   /@.*\\.mailchimp\\.com$/i,
   /@.*\\.mailgun\\.(com|org)$/i,
@@ -211,6 +129,21 @@ const EXCLUDED_PATTERNS = [
   /@.*\\.intercom-mail\\.com$/i,
   /@.*\\.zendesk\\.com$/i,
   /@.*\\.freshdesk\\.com$/i,
+  /@.*\\.brevo\\.com$/i,           // Brevo (formerly Sendinblue)
+  /@.*\\.sendinblue\\.com$/i,      // Sendinblue (now Brevo)
+  /@.*\\.customer\\.io$/i,         // Customer.io
+  /@.*\\.mailerlite\\.com$/i,      // MailerLite
+  /@.*\\.drip\\.com$/i,            // Drip
+  /@.*\\.convertkit\\.com$/i,      // ConvertKit
+  /@.*\\.activecampaign\\.com$/i,  // ActiveCampaign
+  /@.*\\.getresponse\\.com$/i,     // GetResponse
+  /@.*\\.aweber\\.com$/i,          // AWeber
+  /@.*\\.sailthru\\.com$/i,        // Sailthru
+  /@.*\\.iterable\\.com$/i,        // Iterable
+  /@.*\\.leanplum\\.com$/i,        // Leanplum
+  /@.*\\.onesignal\\.com$/i,       // OneSignal
+  /@.*\\.pushwoosh\\.com$/i,       // Pushwoosh
+  /@.*\\.airship\\.com$/i,         // Airship (Urban Airship)
 ];
 
 // ============================================================================
@@ -730,7 +663,11 @@ function isMyEmail(emailStr) {
   if (!_cachedUserEmail) {
     _cachedUserEmail = Session.getEffectiveUser().getEmail().toLowerCase();
   }
-  return emailStr.toLowerCase().includes(_cachedUserEmail);
+  // Extract email address from string (handles "Name <email>" format)
+  const extracted = extractEmailFromString(emailStr);
+  if (!extracted) return false;
+  // Exact match, not substring match (prevents john@co.com matching notjohn@co.com)
+  return extracted.toLowerCase() === _cachedUserEmail;
 }
 
 /**
