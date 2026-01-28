@@ -19,11 +19,14 @@ function DomainInput({ domains, setDomains }) {
   }
 
   const validDomains = domains.filter(d => d.trim() !== '')
+  const hasGenericDomain = domains.some(d =>
+    ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com'].includes(d.toLowerCase().trim())
+  )
 
   return (
     <div className="space-y-3">
       <p className="text-slate-400 text-sm">
-        Contacts from these domains will be excluded from your list.
+        Enter your <span className="text-slate-300">work email domain</span> — contacts from this domain will be excluded (coworkers).
       </p>
 
       <div className="space-y-2">
@@ -50,6 +53,17 @@ function DomainInput({ domains, setDomains }) {
           </div>
         ))}
       </div>
+
+      {/* Warning for generic email domains */}
+      {hasGenericDomain && (
+        <div className="p-3 bg-amber-900/30 border border-amber-600/50 rounded-lg">
+          <p className="text-amber-400 text-xs font-medium">⚠️ Are you sure?</p>
+          <p className="text-amber-300/80 text-xs mt-1">
+            This looks like a personal email provider. Excluding it will filter out most of your contacts.
+            You probably want your <span className="text-amber-200">work domain</span> here instead (like "acme.com").
+          </p>
+        </div>
+      )}
 
       <button
         onClick={addDomain}
@@ -100,6 +114,16 @@ function LookbackSelector({ initialLookback, setInitialLookback }) {
       <p className="text-slate-500 text-xs font-mono">
         // after first run: scans last 7 days every Friday night
       </p>
+
+      {/* Warning for long lookback periods */}
+      {initialLookback >= 90 && (
+        <div className="p-3 bg-amber-900/30 border border-amber-700/50 rounded-lg">
+          <p className="text-amber-400 text-sm font-medium">Heads up</p>
+          <p className="text-amber-300/80 text-xs mt-1">
+            Scanning {initialLookback === 365 ? 'a year' : '90 days'} of data may take 10-20 minutes on first run (once you get through all steps here).
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -269,7 +293,8 @@ const getSteps = (domains, setDomains, initialLookback, setInitialLookback, scri
           <div>3. Check "Select all" → "Continue"</div>
         </div>
         <p className="text-slate-500 text-xs mt-2">
-          "Unsafe" = Google hasn't reviewed it. It's your own script, it's fine.
+          Google shows "unsafe" because they haven't reviewed the code — this is normal for personal scripts.
+          You can <a href="#code" className="text-orange-400 hover:text-orange-300">review the full source code</a> yourself before authorizing.
         </p>
       </div>
     ),
@@ -282,7 +307,7 @@ const getSteps = (domains, setDomains, initialLookback, setInitialLookback, scri
         <div className="p-3 bg-green-900/30 border border-green-700/50 rounded-lg">
           <p className="text-green-400 text-sm font-medium">🎉 You're all set!</p>
           <p className="text-green-300/80 text-xs mt-1">
-            The script is now scanning your emails and calendar. Give it a few minutes to populate the sheet, then open your new spreadsheet:
+            The script is now scanning your emails and calendar. This may take a few minutes — open your spreadsheet to check progress:
           </p>
         </div>
         <a
@@ -324,6 +349,13 @@ export default function Steps({ currentStep, setCurrentStep, domains, setDomains
 
   const toggleExpand = (index) => {
     setCurrentStep(currentStep === index ? -1 : index)
+  }
+
+  const resetAll = () => {
+    setCompletedSteps(new Set())
+    setDomains([''])
+    setInitialLookback(30)
+    setCurrentStep(0)
   }
 
   return (
@@ -399,26 +431,44 @@ export default function Steps({ currentStep, setCurrentStep, domains, setDomains
         {/* Progress indicator */}
         <div className="mt-6 pt-4 border-t border-slate-800">
           <div className="flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-500">
-              {completedSteps.size}/{steps.length} completed
-            </span>
-            {completedSteps.size === steps.length && (
-              <span className="text-green-400">✓ setup complete</span>
+            <div className="flex items-center gap-4">
+              <span className="text-slate-500">
+                {completedSteps.size}/{steps.length} completed
+              </span>
+              {completedSteps.size === steps.length && (
+                <span className="text-green-400">✓ setup complete</span>
+              )}
+            </div>
+            {completedSteps.size > 0 && (
+              <button
+                onClick={resetAll}
+                className="text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                reset
+              </button>
             )}
           </div>
 
-          {/* Completion tip */}
-          {completedSteps.size === steps.length && (
+          {/* Completion tip - shows after step 6 (auth) is checked, not waiting for step 7 */}
+          {completedSteps.has('auth') && (
             <div className="mt-4 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-              <p className="text-slate-300 text-sm font-medium mb-2">📅 One more thing...</p>
+              <p className="text-slate-300 text-sm font-medium mb-2">📅 Last few things...</p>
               <p className="text-slate-400 text-xs leading-relaxed">
-                Set a recurring reminder on your calendar or to-do list for <span className="text-orange-400">Sunday mornings</span> to
+                Set a recurring reminder on your calendar or to-do list for <span className="text-orange-400">sometime each week</span> to
                 check your AutoLink sheet and send connection requests on LinkedIn.
               </p>
               <p className="text-slate-500 text-xs mt-3 leading-relaxed">
+                <span className="text-slate-400">FYI:</span> LinkedIn limits you to ~100-200 connection requests per week.
+                If your first scan found a lot of contacts, you may need to spread them out over several weeks.
+              </p>
+              <p className="text-slate-500 text-xs mt-3 leading-relaxed">
                 <span className="text-slate-400">Why not fully automated?</span> Computer-use agents are still unreliable for
-                LinkedIn automation. You could try asking <a href="https://cowork.gg" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">CoWork</a> to
+                LinkedIn automation. You could try asking <a href="https://claude.ai/cowork" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">Claude Cowork</a> to
                 click through the links and add people — and over time we'll add more automation to AutoLink.
+              </p>
+              <p className="text-slate-500 text-xs mt-4 pt-3 border-t border-slate-700 leading-relaxed">
+                If you're building something genuinely useful, you should consider applying to{' '}
+                <a href="https://pear.vc/pearx/" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300">PearX</a>.
               </p>
             </div>
           )}

@@ -7,15 +7,11 @@ const faqs = [
   },
   {
     question: "Where do I find my contacts?",
-    answer: "In Google Drive, look for the 'AutoLink' spreadsheet. Each week gets its own tab. The 'Master' tab has everyone you've ever seen."
+    answer: "In Google Drive, look for the 'AutoLink' spreadsheet. Each week gets its own tab with only new contacts — people already in your Master list won't appear again."
   },
   {
     question: "No contacts appeared?",
-    answer: "Make sure you've sent emails or had meetings in the lookback period you selected. Also check that your domain exclusion isn't filtering everyone out."
-  },
-  {
-    question: "How do I run it manually?",
-    answer: "Open the AutoLink spreadsheet, then click AutoLink → Run Now in the menu bar."
+    answer: "Make sure you've sent emails or had meetings in the lookback period you selected. The domain exclusion should be your work domain (like 'acme.com'), not 'gmail.com' — if you exclude gmail.com, you'll filter out most personal contacts."
   },
   {
     question: "Google says 'unsafe' — is this okay?",

@@ -33,7 +33,7 @@ export default function CodeBlock({ code, domains }) {
           <div className="mb-4 flex items-center gap-2 text-xs font-mono">
             <span className="text-amber-400">!</span>
             <span className="text-slate-400">
-              no domains configured — <a href="#setup" className="text-orange-400 hover:text-orange-300">go to step 3</a>
+              no domains configured — <a href="#setup" className="text-orange-400 hover:text-orange-300">go to step 2</a>
             </span>
           </div>
         )}
