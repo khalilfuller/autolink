@@ -243,7 +243,8 @@ function resetSetup() {
  * @param {number} daysOverride - Optional: override the number of days to scan
  */
 function main(daysOverride) {
-  const daysToScan = daysOverride || CONFIG.DAYS_TO_SCAN;
+  // When called by trigger, daysOverride might be an event object - ignore non-numbers
+  const daysToScan = (typeof daysOverride === 'number') ? daysOverride : CONFIG.DAYS_TO_SCAN;
   Logger.log(\`🔄 Starting AutoLink scan (last \${daysToScan} days)...\`);
 
   const spreadsheet = getSpreadsheet();
