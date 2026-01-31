@@ -496,7 +496,8 @@ function mergeContacts(emailContacts, calendarContacts) {
  */
 function extractEmailFromString(str) {
   if (!str) return null;
-  const match = str.match(/<([^>]+)>/) || str.match(/([\\w.-]+@[\\w.-]+\\.[a-z]{2,})/i);
+  // Match email in angle brackets, or bare email (including + for aliases like john+work@gmail.com)
+  const match = str.match(/<([^>]+)>/) || str.match(/([\\w.+-]+@[\\w.-]+\\.[a-z]{2,})/i);
   return match ? match[1].toLowerCase() : null;
 }
 
@@ -700,10 +701,10 @@ function isMyEmail(emailStr) {
 }
 
 /**
- * Basic email validation
+ * Basic email validation (allows + for aliases like john+work@gmail.com)
  */
 function isValidEmail(email) {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+  return /^[\\w.+-]+@[\\w.-]+\\.[a-z]{2,}$/i.test(email);
 }
 
 // ============================================================================
@@ -811,12 +812,16 @@ function addToWeeklyTab(sheet, contacts) {
     // If we found their LinkedIn URL directly, use it
     const profileUrl = contact.linkedInUrl || '';
 
+    // Escape double quotes in URLs to prevent formula injection
+    const safeLinkedInUrl = linkedInSearchUrl.replace(/"/g, '""');
+    const safeGoogleUrl = googleSearchUrl.replace(/"/g, '""');
+
     return [
       contact.name,
       contact.email,
       company,
-      \`=HYPERLINK("\${linkedInSearchUrl}", "🔍 LinkedIn")\`,
-      \`=HYPERLINK("\${googleSearchUrl}", "🔍 Google")\`,
+      \`=HYPERLINK("\${safeLinkedInUrl}", "🔍 LinkedIn")\`,
+      \`=HYPERLINK("\${safeGoogleUrl}", "🔍 Google")\`,
       profileUrl, // Pre-filled if found in signature
       false, // Connected checkbox
     ];
