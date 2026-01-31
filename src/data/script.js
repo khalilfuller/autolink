@@ -312,6 +312,7 @@ function getOutboundContacts(daysToScan) {
   const daysAgo = new Date();
   daysAgo.setDate(daysAgo.getDate() - daysToScan);
   const dateStr = Utilities.formatDate(daysAgo, Session.getScriptTimeZone(), 'yyyy/MM/dd');
+  const cutoffTime = daysAgo.getTime();
 
   const query = \`in:sent after:\${dateStr}\`;
 
@@ -330,7 +331,11 @@ function getOutboundContacts(daysToScan) {
     const messages = thread.getMessages();
 
     // First pass: collect all recipients from my sent messages
+    // IMPORTANT: Only process messages within the date range to avoid timeout on long threads
     messages.forEach(message => {
+      // Skip messages outside our date range
+      if (message.getDate().getTime() < cutoffTime) return;
+
       const from = message.getFrom();
       if (!isMyEmail(from)) return;
 
@@ -354,7 +359,11 @@ function getOutboundContacts(daysToScan) {
     });
 
     // Second pass: scan replies from contacts to extract signature info
+    // Only look at recent messages to avoid processing entire thread history
     messages.forEach(message => {
+      // Skip messages outside our date range
+      if (message.getDate().getTime() < cutoffTime) return;
+
       const from = message.getFrom();
       if (isMyEmail(from)) return; // Skip my own messages
 
