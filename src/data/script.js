@@ -477,13 +477,20 @@ function mergeContacts(emailContacts, calendarContacts) {
 
   // Add email contacts first (they have richer data from signatures)
   emailContacts.forEach(contact => {
+    contact.sourceEmail = true;
+    contact.sourceCalendar = false;
     merged.set(contact.email.toLowerCase(), contact);
   });
 
-  // Add calendar contacts only if not already present from email
+  // Add calendar contacts, merging source flags if already present from email
   calendarContacts.forEach(contact => {
     const key = contact.email.toLowerCase();
-    if (!merged.has(key)) {
+    if (merged.has(key)) {
+      // Contact found in both sources - keep email data, mark both sources
+      merged.get(key).sourceCalendar = true;
+    } else {
+      contact.sourceEmail = false;
+      contact.sourceCalendar = true;
       merged.set(key, contact);
     }
   });
@@ -745,7 +752,7 @@ function setupMasterTab(sheet) {
  * Sets up a weekly tab with headers and formatting
  */
 function setupWeeklyTab(sheet) {
-  const headers = ['Name', 'Email', 'Company', 'LinkedIn Search', 'Google Search', 'Profile URL', 'Connected'];
+  const headers = ['Name', 'Email', 'Company', 'LinkedIn Search', 'Google Search', 'Profile URL', 'Connected', 'Source: Email', 'Source: Calendar'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(1, 1, 1, headers.length)
     .setFontWeight('bold')
@@ -761,6 +768,8 @@ function setupWeeklyTab(sheet) {
   sheet.setColumnWidth(5, 130); // Google Search
   sheet.setColumnWidth(6, 250); // Profile URL
   sheet.setColumnWidth(7, 100); // Connected
+  sheet.setColumnWidth(8, 110); // Source: Email
+  sheet.setColumnWidth(9, 110); // Source: Calendar
 }
 
 /**
@@ -824,6 +833,8 @@ function addToWeeklyTab(sheet, contacts) {
       \`=HYPERLINK("\${safeGoogleUrl}", "🔍 Google")\`,
       profileUrl, // Pre-filled if found in signature
       false, // Connected checkbox
+      contact.sourceEmail || false,  // Source: Email checkbox
+      contact.sourceCalendar || false, // Source: Calendar checkbox
     ];
   });
 
@@ -831,8 +842,8 @@ function addToWeeklyTab(sheet, contacts) {
     const startRow = sheet.getLastRow() + 1;
     sheet.getRange(startRow, 1, rows.length, rows[0].length).setValues(rows);
 
-    // Add checkboxes to Connected column (now column 7)
-    sheet.getRange(startRow, 7, rows.length, 1).insertCheckboxes();
+    // Add checkboxes to Connected column (column 7) and Source columns (columns 8-9)
+    sheet.getRange(startRow, 7, rows.length, 3).insertCheckboxes();
   }
 }
 
@@ -878,7 +889,14 @@ function getWeekLabel(date) {
   const day = sunday.getDay();
   sunday.setDate(sunday.getDate() - day);
 
-  return Utilities.formatDate(sunday, Session.getScriptTimeZone(), 'MM/dd/yyyy');
+  // Get the Saturday (end of week)
+  const saturday = new Date(sunday);
+  saturday.setDate(saturday.getDate() + 6);
+
+  const startStr = Utilities.formatDate(sunday, Session.getScriptTimeZone(), 'MM/dd');
+  const endStr = Utilities.formatDate(saturday, Session.getScriptTimeZone(), 'MM/dd/yyyy');
+
+  return \`\${startStr} - \${endStr}\`;
 }
 
 // ============================================================================
